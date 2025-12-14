@@ -11,12 +11,28 @@ ratings = preprocess_ratings(ratings)
 users = preprocess_users(users, ratings)
 books = preprocess_books(books, ratings)
 
+
+# Brzi lookup po ISBN-u
+books_lookup = books.set_index("ISBN")[["Book-Title", "Book-Author"]]
+
+
 recommendations = ubcf_recommended_books_knn(ratings,TOP_N_RECOMMENDATIONS)
 
-# Prikaz preporuka za prvih 5 korisnika
-print("Recomends",recommendations)
-# for user_id, books_list in list(recommendations.items())[:5]:
-#     print(f"Korisnik {user_id} preporučene knjige: {books_list}")
+for user_id, books_list in recommendations.items():
+    print(f"\nKorisnik {user_id} – preporučene knjige:")
+
+    if not books_list:
+        print("  (nema preporuka)")
+        continue
+
+    for isbn in books_list:
+        if isbn in books_lookup.index:
+            title = books_lookup.loc[isbn, "Book-Title"]
+            author = books_lookup.loc[isbn, "Book-Author"]
+            print(f"  • {title} — {author}")
+        else:
+            print(f"  • Nepoznata knjiga (ISBN: {isbn})")
+
 
 print("Users:", len(users))
 print("Books:", len(books))
