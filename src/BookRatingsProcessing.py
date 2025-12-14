@@ -10,6 +10,8 @@ def preprocess_ratings(ratings):
 
     # Opseg ocena
     ratings = ratings[(ratings["Book-Rating"] >= MIN_RATING) & (ratings["Book-Rating"] <= MAX_RATING)]
+    
+
 
     # Broj ocena
     user_ratings_number = ratings.groupby("User-ID").size()

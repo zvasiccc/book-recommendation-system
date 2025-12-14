@@ -11,28 +11,20 @@ ratings = preprocess_ratings(ratings)
 users = preprocess_users(users, ratings)
 books = preprocess_books(books, ratings)
 
+ratings = ratings[ratings["ISBN"].isin(books["ISBN"])].reset_index(drop=True)
 
-# Brzi lookup po ISBN-u
+
+#quick lookup 
 books_lookup = books.set_index("ISBN")[["Book-Title", "Book-Author"]]
 
+#user_id = 278851
+user_id = 278854
 
-recommendations = ubcf_recommended_books_knn(ratings,TOP_N_RECOMMENDATIONS)
+recommendations = ubcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 
-for user_id, books_list in recommendations.items():
-    print(f"\nKorisnik {user_id} – preporučene knjige:")
-
-    if not books_list:
-        print("  (nema preporuka)")
-        continue
-
-    for isbn in books_list:
-        if isbn in books_lookup.index:
-            title = books_lookup.loc[isbn, "Book-Title"]
-            author = books_lookup.loc[isbn, "Book-Author"]
-            print(f"  • {title} — {author}")
-        else:
-            print(f"  • Nepoznata knjiga (ISBN: {isbn})")
-
+for isbn, score in recommendations:
+    book = books[books["ISBN"] == isbn].iloc[0]
+    print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")
 
 print("Users:", len(users))
 print("Books:", len(books))
