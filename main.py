@@ -31,7 +31,3 @@ for isbn, score in recommendations_ubcf:
 for isbn, score in recommendations_ibcf:
     book = books[books["ISBN"] == isbn].iloc[0]
     print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")
-
-print("Users:", len(users))
-print("Books:", len(books))
-print("Ratings:", len(ratings))

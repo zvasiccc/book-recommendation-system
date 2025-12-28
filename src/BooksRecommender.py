@@ -12,6 +12,7 @@ def ubcf_recommended_books_knn(
     k_neighbors=50
 ):
 
+    #ratings filtering and normalization
     filtered_ratings = filter_active_users_in_ratings(ratings)
     normalized_ratings = ratings_normalization(filtered_ratings)
 
@@ -27,7 +28,7 @@ def ubcf_recommended_books_knn(
         metric="cosine",
         algorithm="brute",
         n_neighbors=k_neighbors + 1,
-        n_jobs=1
+        n_jobs=-1
     )
     model_knn.fit(user_item_matrix)
 
@@ -43,23 +44,24 @@ def ubcf_recommended_books_knn(
     predicted_scores = defaultdict(lambda: [0.0, 0.0])
 
     #prediction:
-    for sim, neighbor_idx in zip(similarities, neighbor_indices):
-        neighbor_books = user_item_matrix[neighbor_idx].indices
+    for neighbor_sim, neighbor_index in zip(similarities, neighbor_indices):
+        neighbor_books = user_item_matrix[neighbor_index].indices
 
         for book_idx in neighbor_books:
             if book_idx in rated_books:
                 continue
 
-            rating = user_item_matrix[neighbor_idx, book_idx]
-            predicted_scores[book_idx][0] += sim * rating
-            predicted_scores[book_idx][1] += abs(sim)
+            rating = user_item_matrix[neighbor_index, book_idx]
+            predicted_scores[book_idx][0] += neighbor_sim * rating
+            predicted_scores[book_idx][1] += abs(neighbor_sim)
 
-    #final 
-    final_predictions = {
-        book_index[b]: s[0] / s[1]
-        for b, s in predicted_scores.items()
-        if s[1] > 0
-    }
+    #final predictions
+    final_predictions = {}
+    for book_idx,score_pair in predicted_scores.items():
+        if score_pair[1]>0:
+            book_isbn= book_index[book_idx]
+            predicted_rating = score_pair[0] / score_pair[1]
+            final_predictions[book_isbn] = predicted_rating
 
     #top n books
     top_books = sorted(
@@ -72,11 +74,11 @@ def ubcf_recommended_books_knn(
 
 def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
 
-    # 1. filtriranje i normalizacija
+    #filtering and normalization
     filtered_ratings = filter_active_users_in_ratings(ratings)
     normalized_ratings = ratings_normalization(filtered_ratings)
 
-    # 2. item-user matrica
+    #item-user matrix
     item_user_matrix, book_index, user_index = create_item_user_matrix_sparse(
         normalized_ratings
     )

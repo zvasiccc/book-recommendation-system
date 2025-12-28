@@ -11,7 +11,7 @@ def preprocess_books(books,ratings):
 
     books["ISBN"] = books["ISBN"].apply(normalize_isbn)
 
-     # Spajanje duplikata
+    #spajanje duplikata
     books = books.groupby("ISBN").agg({
         "Book-Title": "first",
         "Book-Author": "first",
@@ -19,7 +19,7 @@ def preprocess_books(books,ratings):
         "Publisher": "first"
     }).reset_index()
 
-      # Zadrzavaju se sa samo ocenjene knjige
+    #zadrzavaju se sa samo ocenjene knjige
     books_with_ratings = ratings["ISBN"].unique()
     books = books[books["ISBN"].isin(books_with_ratings)].reset_index(drop=True)
 
