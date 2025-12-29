@@ -18,16 +18,19 @@ ratings = ratings[ratings["ISBN"].isin(books["ISBN"])].reset_index(drop=True)
 #quick lookup 
 books_lookup = books.set_index("ISBN")[["Book-Title", "Book-Author"]]
 
-user_id = 278851
+#user_id = 278851
 #user_id = 278854
+user_id= 276828
 
 recommendations_ubcf = ubcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 recommendations_ibcf = ibcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 
+print(f"UBCF:")
 for isbn, score in recommendations_ubcf:
     book = books[books["ISBN"] == isbn].iloc[0]
     print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")
     
+print(f"IBCF:")   
 for isbn, score in recommendations_ibcf:
     book = books[books["ISBN"] == isbn].iloc[0]
     print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")

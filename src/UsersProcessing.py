@@ -17,7 +17,7 @@ def preprocess_users(users, ratings):
 
     return users
 
-def filter_active_users_in_ratings(ratings):
+def filter_ratings(ratings):
 
     user_ratings_number = ratings.groupby("User-ID").size()
     threshold = max(user_ratings_number.quantile(USER_BASED_THRESHOLD_PERCENTILE), MIN_NUBMER_OF_RATINGS)
@@ -27,7 +27,6 @@ def filter_active_users_in_ratings(ratings):
     book_counts = filtered_ratings.groupby("ISBN").size()
     popular_books = book_counts[book_counts >= MIN_NUBMER_OF_BOOK_RATINGS].index
     filtered_ratings = filtered_ratings[filtered_ratings["ISBN"].isin(popular_books)].reset_index(drop=True)
-    
     return filtered_ratings
 
 
@@ -39,3 +38,5 @@ def ratings_normalization(ratings):
         axis=1
     )
     return ratings
+
+
