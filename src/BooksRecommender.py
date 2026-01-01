@@ -2,6 +2,9 @@ from src.UsersProcessing import filter_ratings, ratings_normalization
 from src.MatrixCreator import create_user_item_matrix_sparse, create_item_user_matrix_sparse
 from sklearn.neighbors import NearestNeighbors 
 from collections import defaultdict
+from surprise import Dataset, Reader, SVD
+from surprise.model_selection import train_test_split
+from collections import defaultdict
 import numpy as np
 
 #main function
@@ -139,3 +142,31 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=10):
         key=lambda x: x[1],
         reverse=True
     )[:top_n]
+    
+
+def svd_recommended_books(user_id, ratings, top_n=10):
+
+    # priprema podataka za Surprise
+    reader = Reader(rating_scale=(ratings['Book-Rating'].min(), ratings['Book-Rating'].max()))
+    data = Dataset.load_from_df(ratings[['User-ID', 'ISBN', 'Book-Rating']], reader)
+
+    trainset = data.build_full_trainset()  # koristi sve podatke za treniranje
+
+    # inicijalizacija i treniranje SVD modela
+    algo = SVD()
+    algo.fit(trainset)
+
+    # skupljanje svih ISBN-ova koje korisnik nije ocenio
+    all_books = set(ratings['ISBN'].unique())
+    user_rated_books = set(ratings[ratings['User-ID'] == user_id]['ISBN'])
+    books_to_predict = all_books - user_rated_books
+
+    # predikcija ocena
+    predictions = []
+    for book in books_to_predict:
+        pred = algo.predict(user_id, book)
+        predictions.append((book, pred.est))
+
+    # sortiranje i vraćanje top-N knjiga
+    top_books = sorted(predictions, key=lambda x: x[1], reverse=True)[:top_n]
+    return top_books
