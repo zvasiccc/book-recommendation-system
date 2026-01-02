@@ -2,9 +2,10 @@ from src.UsersProcessing import filter_ratings, ratings_normalization
 from src.MatrixCreator import create_user_item_matrix_sparse, create_item_user_matrix_sparse
 from sklearn.neighbors import NearestNeighbors 
 from collections import defaultdict
-from surprise import Dataset, Reader, SVD
+from surprise import Dataset, Reader, SVD, accuracy
 from surprise.model_selection import train_test_split
 from collections import defaultdict
+from sklearn.metrics import mean_squared_error
 import numpy as np
 
 #main function
@@ -75,7 +76,7 @@ def ubcf_recommended_books_knn(
 
     return top_books
 
-def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=10):
+def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
 
     #filtering and normalization
     filtered_ratings = filter_ratings(ratings)
@@ -170,3 +171,107 @@ def svd_recommended_books(user_id, ratings, top_n=10):
     # sortiranje i vraćanje top-N knjiga
     top_books = sorted(predictions, key=lambda x: x[1], reverse=True)[:top_n]
     return top_books
+
+
+def ubcf_evaluation_rmse(user_id, ratings, k_neighbors=50):
+    filtered_ratings = filter_ratings(ratings)
+    normalized_ratings = ratings_normalization(filtered_ratings)
+    user_item_matrix, user_index, book_index = create_user_item_matrix_sparse(normalized_ratings)
+
+    if user_id not in user_index:
+        raise ValueError(f"User {user_id} ne postoji ili nema dovoljno ocena.")
+
+    user_pos = np.where(user_index == user_id)[0][0]
+
+    model_knn = NearestNeighbors(
+        metric="cosine",
+        algorithm="brute",
+        n_neighbors=k_neighbors + 1,
+        n_jobs=-1
+    )
+    model_knn.fit(user_item_matrix)
+
+    distances, indices = model_knn.kneighbors(user_item_matrix[user_pos])
+    similarities = 1 - distances.flatten()[1:]
+    neighbor_indices = indices.flatten()[1:]
+
+    # sve knjige koje korisnik jeste ocenio
+    rated_books = user_item_matrix[user_pos].indices
+    predicted_scores = {}
+
+    for book_idx in rated_books:
+        numerator = 0.0
+        denominator = 0.0
+        for neighbor_sim, neighbor_index in zip(similarities, neighbor_indices):
+            rating = user_item_matrix[neighbor_index, book_idx]
+            numerator += neighbor_sim * rating
+            denominator += abs(neighbor_sim)
+        if denominator > 0:
+            predicted_scores[book_index[book_idx]] = numerator / denominator
+
+    return predicted_scores 
+
+
+def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=10):
+    # filtriranje i normalizacija
+    filtered_ratings = filter_ratings(ratings)
+    normalized_ratings = ratings_normalization(filtered_ratings)
+
+    # kreiranje item-user matrice
+    item_user_matrix, book_index, user_index = create_item_user_matrix_sparse(normalized_ratings)
+
+    if user_id not in user_index:
+        raise ValueError(f"User {user_id} ne postoji ili nema dovoljno ocena.")
+
+    user_pos = np.where(user_index == user_id)[0][0]
+    rated_books = item_user_matrix[:, user_pos].nonzero()[0]
+
+    model_knn = NearestNeighbors(
+        metric="cosine",
+        algorithm="brute",
+        n_neighbors=k_neighbors + 1,
+        n_jobs=-1
+    )
+    model_knn.fit(item_user_matrix)
+
+    predicted_scores = {}
+
+    # predikcija samo za knjige koje korisnik jeste ocenio
+    for rated_book in rated_books:
+        numerator = 0.0
+        denominator = 0.0
+        user_rating = item_user_matrix[rated_book, user_pos]
+
+        distances, indices = model_knn.kneighbors(item_user_matrix[rated_book])
+        similarities = 1 - distances.flatten()[1:]
+        neighbor_indices = indices.flatten()[1:]
+
+        for neighbor_sim, neighbor_index in zip(similarities, neighbor_indices):
+            numerator += neighbor_sim * user_rating
+            denominator += abs(neighbor_sim)
+
+        if denominator > 0:
+            predicted_scores[book_index[rated_book]] = numerator / denominator
+
+    return predicted_scores  
+
+
+
+def evaluate_svd_rmse(ratings, test_size=0.2, random_state=42):
+
+    reader = Reader(rating_scale=(ratings['Book-Rating'].min(), ratings['Book-Rating'].max()))
+    data = Dataset.load_from_df(ratings[['User-ID', 'ISBN', 'Book-Rating']], reader)
+
+    #podela na train i test skup
+    trainset, testset = train_test_split(data, test_size=test_size, random_state=random_state)
+
+    #treniranje SVD modela
+    algo = SVD()
+    algo.fit(trainset)
+
+    #predikcija na test skupu
+    predictions = algo.test(testset)
+
+    rmse = accuracy.rmse(predictions)
+    return rmse
+
