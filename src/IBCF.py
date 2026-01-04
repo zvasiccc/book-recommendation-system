@@ -1,4 +1,4 @@
-from src.UsersProcessing import filter_ratings, ratings_normalization
+from src.BookRatingsProcessing import filter_ratings, ratings_normalization
 from src.MatrixCreator import create_item_user_matrix_sparse
 from sklearn.neighbors import NearestNeighbors 
 from collections import defaultdict

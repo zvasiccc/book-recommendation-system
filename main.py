@@ -23,10 +23,10 @@ ratings = ratings[ratings["ISBN"].isin(books["ISBN"])].reset_index(drop=True)
 books_lookup = books.set_index("ISBN")[["Book-Title", "Book-Author"]]
 
 #high number of grades
-user_id= 198711
+#user_id= 198711
 
 #low number of grades
-#user_id = 276828
+user_id = 276828
 
 recommendations_ubcf = ubcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 recommendations_ibcf = ibcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
