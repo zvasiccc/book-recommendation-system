@@ -1,4 +1,3 @@
-from src.BookRatingsProcessing import filter_ratings, ratings_normalization
 from src.MatrixCreator import create_item_user_matrix_sparse
 from sklearn.neighbors import NearestNeighbors 
 from collections import defaultdict
@@ -8,14 +7,8 @@ import numpy as np
 
 def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
 
-    #filtering and normalization
-    filtered_ratings = filter_ratings(ratings)
-    normalized_ratings = ratings_normalization(filtered_ratings)
-
     #item-user matrix
-    item_user_matrix, book_index, user_index = create_item_user_matrix_sparse(
-        normalized_ratings
-    )
+    item_user_matrix, book_index, user_index = create_item_user_matrix_sparse(ratings)
 
     if user_id not in user_index:
         raise ValueError(f"User with ID {user_id} does not exists or does not have enough given ratings to recommend book for him.")
@@ -75,12 +68,9 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
     )[:top_n]
     
 def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=10):
-    #filtering and normalization
-    filtered_ratings = filter_ratings(ratings)
-    normalized_ratings = ratings_normalization(filtered_ratings)
 
     #item-user matrix
-    item_user_matrix, book_index, user_index = create_item_user_matrix_sparse(normalized_ratings)
+    item_user_matrix, book_index, user_index = create_item_user_matrix_sparse(ratings)
 
     if user_id not in user_index:
         raise ValueError(f"User with ID {user_id} does not exists or does not have enough given ratings to recommend book for him.")
