@@ -18,17 +18,20 @@ ratings = ratings[ratings["ISBN"].isin(books["ISBN"])].reset_index(drop=True)
 ratings = filter_ratings(ratings)
 ratings = ratings_normalization(ratings)
 
-ratings_per_user = ratings.groupby('User-ID').size().sort_values(ascending=False)
-print(ratings_per_user.head(10))
+# ratings_per_user = ratings.groupby('User-ID').size().sort_values(ascending=True)
+# print(ratings_per_user.head(6000))
 
 #quick lookup 
 books_lookup = books.set_index("ISBN")[["Book-Title", "Book-Author"]]
 
 #high number of grades
-user_id= 114368
+#user_id= 114368
 
 #low number of grades
-#ser_id = 218935
+#user_id = 133284 
+
+#mid number of grades
+user_id = 252071
 
 recommendations_ubcf = ubcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 recommendations_ibcf = ibcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
@@ -41,7 +44,10 @@ print(f"UBCF RMSE za korisnika {user_id}: {ubcf_rmse:.4f}")
 
 ibcf_rmse = ibcf_evaluation_rmse(user_id, ratings)
 
-print(f"IBCF RMSE za korisnika {user_id}: {ibcf_rmse:.4f}")
+if ibcf_rmse is not None:
+    print(f"IBCF RMSE za korisnika {user_id}: {ibcf_rmse:.4f}")
+else:
+    print(f"IBCF RMSE za korisnika {user_id}: Nedovoljno podataka za RMSE")
 
 
 rmse_svd = evaluate_svd_rmse(ratings)

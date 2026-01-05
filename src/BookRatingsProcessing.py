@@ -23,10 +23,10 @@ def preprocess_ratings(ratings):
     ratings["book_rating_count"] = ratings["ISBN"].map(book_ratings_number)
 
     #users scalling
-    ratings.loc[ratings["User-ID"].isin(extreme_users), "Book-Rating"] *= users_threshold / ratings.loc[ratings["User-ID"].isin(extreme_users), "user_rating_count"]
+    #ratings.loc[ratings["User-ID"].isin(extreme_users), "Book-Rating"] *= users_threshold / ratings.loc[ratings["User-ID"].isin(extreme_users), "user_rating_count"]
 
     #books scalling
-    ratings.loc[ratings["ISBN"].isin(extreme_books), "Book-Rating"] *= books_threshold / ratings.loc[ratings["ISBN"].isin(extreme_books), "book_rating_count"]
+    #ratings.loc[ratings["ISBN"].isin(extreme_books), "Book-Rating"] *= books_threshold / ratings.loc[ratings["ISBN"].isin(extreme_books), "book_rating_count"]
 
     return ratings
 
@@ -43,12 +43,26 @@ def filter_ratings(ratings):
     
     return ratings[ratings["User-ID"].isin(active_users)].reset_index(drop=True)
 
+# def ratings_normalization(ratings):
+
+#     user_mean = ratings.groupby("User-ID")["Book-Rating"].mean()
+#     ratings["Book-Rating-Normalized"] = ratings.apply(
+#         lambda row: row["Book-Rating"] - user_mean[row["User-ID"]],
+#         axis=1
+#     )
+#     return ratings
+
 def ratings_normalization(ratings):
-
-    user_mean = ratings.groupby("User-ID")["Book-Rating"].mean()
-    ratings["Book-Rating-Normalized"] = ratings.apply(
-        lambda row: row["Book-Rating"] - user_mean[row["User-ID"]],
-        axis=1
-    )
+    # 1. Izračunaj prosek jednom za sve korisnike
+    user_means = ratings.groupby("User-ID")["Book-Rating"].mean()
+    
+    # 2. Dodaj kolonu user_mean (biće ti korisna za denormalizaciju kasnije)
+    # map() će svakom User-ID-u dodeliti njegov prosek munjevitom brzinom
+    ratings["user_mean"] = ratings["User-ID"].map(user_means)
+    
+    print(f"user means",user_means)
+    
+    # 3. Izračunaj normalizovanu ocenu bez apply() petlje
+    ratings["Book-Rating-Normalized"] = ratings["Book-Rating"] - ratings["user_mean"]
+    
     return ratings
-
