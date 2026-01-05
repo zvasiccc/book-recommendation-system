@@ -54,7 +54,7 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
 
     final_predictions = {}  
 
-    user_mean = ratings[ratings["User-ID"] == user_id]["user_mean"].iloc[0]
+    user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
     for neighbor_index, scores in predicted_scores.items():
         numerator = scores[0]    
         denominator = scores[1]  
@@ -71,7 +71,7 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
         reverse=True
     )[:top_n]
     
-def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=10):
+def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
 
     #item-user matrix
     item_user_matrix, book_index, user_index = create_item_user_matrix_sparse(ratings)
@@ -95,7 +95,7 @@ def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=10):
     model_knn.fit(item_user_matrix)
     
     predicted_scores = {}
-    user_mean = ratings[ratings["User-ID"] == user_id]["user_mean"].iloc[0]
+    user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
 
     for rated_book in rated_books:
         numerator = 0.0
@@ -110,13 +110,13 @@ def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=10):
         neighbor_indices = indices.flatten()[1:]
 
         for neighbor_sim, neighbor_index in zip(similarities, neighbor_indices):
-            if neighbor_index == rated_book or neighbor_sim <= 0:
+            if neighbor_sim <= 0:
                 continue
             
             neighbor_rating = item_user_matrix[neighbor_index, user_pos]
 
             
-            if neighbor_rating != 0:
+            if neighbor_rating != 0 and neighbor_index != rated_book:
                 numerator += neighbor_sim * neighbor_rating
                 denominator += abs(neighbor_sim)
 
@@ -132,6 +132,9 @@ def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=10):
 def ibcf_evaluation_rmse(user_id,ratings):
     ibcf_predictions = ibcf_predict_for_rmse(user_id, ratings)
     true_ratings = ratings[ratings['User-ID'] == user_id].set_index('ISBN')['Book-Rating'].to_dict()
+    
+    print(f"predictions su",ibcf_predictions)
+    print(f"true tatings su",true_ratings)
     
     common_books = set(ibcf_predictions.keys()).intersection(true_ratings.keys())
     if not common_books:

@@ -43,26 +43,12 @@ def filter_ratings(ratings):
     
     return ratings[ratings["User-ID"].isin(active_users)].reset_index(drop=True)
 
-# def ratings_normalization(ratings):
-
-#     user_mean = ratings.groupby("User-ID")["Book-Rating"].mean()
-#     ratings["Book-Rating-Normalized"] = ratings.apply(
-#         lambda row: row["Book-Rating"] - user_mean[row["User-ID"]],
-#         axis=1
-#     )
-#     return ratings
 
 def ratings_normalization(ratings):
-    # 1. Izračunaj prosek jednom za sve korisnike
     user_means = ratings.groupby("User-ID")["Book-Rating"].mean()
     
-    # 2. Dodaj kolonu user_mean (biće ti korisna za denormalizaciju kasnije)
-    # map() će svakom User-ID-u dodeliti njegov prosek munjevitom brzinom
-    ratings["user_mean"] = ratings["User-ID"].map(user_means)
+    ratings["User_mean"] = ratings["User-ID"].map(user_means)
     
-    print(f"user means",user_means)
-    
-    # 3. Izračunaj normalizovanu ocenu bez apply() petlje
-    ratings["Book-Rating-Normalized"] = ratings["Book-Rating"] - ratings["user_mean"]
+    ratings["Book-Rating-Normalized"] = ratings["Book-Rating"] - ratings["User_mean"]
     
     return ratings

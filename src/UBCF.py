@@ -47,7 +47,7 @@ def ubcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
             predicted_scores[book_idx][0] += neighbor_sim * rating_diff 
             predicted_scores[book_idx][1] += abs(neighbor_sim)
 
-    user_mean = ratings[ratings["User-ID"] == user_id]["user_mean"].iloc[0]
+    user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
     #final predictions
     final_predictions = {}
     for book_idx,score_pair in predicted_scores.items():
@@ -87,7 +87,7 @@ def ubcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
 
 #     rated_books = user_item_matrix[user_pos].indices
 #     predicted_scores = {}
-#     user_mean = ratings[ratings["User-ID"] == user_id]["user_mean"].iloc[0]
+#     user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
 #     print(user_mean)
 #     for book_idx in rated_books:
 #         temp_user_vector = original_user_vector.copy()
@@ -116,7 +116,7 @@ def ubcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
     rated_books = original_user_vector.indices
     
     predicted_scores = {}
-    user_mean = ratings[ratings["User-ID"] == user_id]["user_mean"].iloc[0]
+    user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
 
     # Model fitujemo na CELU matricu
     model_knn = NearestNeighbors(metric="cosine", algorithm="brute", n_neighbors=k_neighbors + 1)
