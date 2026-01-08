@@ -42,12 +42,11 @@ def ubcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
                 continue
 
             rating_diff = user_item_matrix[neighbor_index, book_idx]
-            if rating_diff == 0:
-                continue
-            predicted_scores[book_idx][0] += neighbor_sim * rating_diff 
-            predicted_scores[book_idx][1] += abs(neighbor_sim)
+            if rating_diff != 0:
+                predicted_scores[book_idx][0] += neighbor_sim * rating_diff 
+                predicted_scores[book_idx][1] += abs(neighbor_sim)
 
-    user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
+    user_mean = ratings[ratings["User-ID"] == user_id]["User-Mean"].iloc[0]
     #final predictions
     final_predictions = {}
     for book_idx,score_pair in predicted_scores.items():
@@ -87,7 +86,7 @@ def ubcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
 
 #     rated_books = user_item_matrix[user_pos].indices
 #     predicted_scores = {}
-#     user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
+#     user_mean = ratings[ratings["User-ID"] == user_id]["User-Mean"].iloc[0]
 #     print(user_mean)
 #     for book_idx in rated_books:
 #         temp_user_vector = original_user_vector.copy()
@@ -111,25 +110,22 @@ def ubcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
     user_item_matrix, user_index, book_index = create_user_item_matrix_sparse(ratings)
     user_pos = np.where(user_index == user_id)[0][0]
     
-    # Originalni vektor korisnika
     original_user_vector = user_item_matrix[user_pos].copy()
     rated_books = original_user_vector.indices
     
     predicted_scores = {}
-    user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
+    user_mean = ratings[ratings["User-ID"] == user_id]["User-Mean"].iloc[0]
 
-    # Model fitujemo na CELU matricu
     model_knn = NearestNeighbors(metric="cosine", algorithm="brute", n_neighbors=k_neighbors + 1)
     model_knn.fit(user_item_matrix)
 
     for book_idx in rated_books:
-        # --- LOO DEO ---
-        # Privremeno ukloni ocenu za knjigu koju predviđamo da ne bi uticala na sličnost
+        #Leave One Out
         temp_user_vector = original_user_vector.copy()
         temp_user_vector[0, book_idx] = 0
         temp_user_vector.eliminate_zeros()
 
-        # Nađi komšije na osnovu "okrnjenog" vektora
+        #neighbors based on chopped user vector
         distances, indices = model_knn.kneighbors(temp_user_vector)
         similarities = 1 - distances.flatten()[1:]
         neighbor_indices = indices.flatten()[1:]
@@ -138,7 +134,6 @@ def ubcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
         denominator = 0.0
 
         for neighbor_sim, neighbor_index in zip(similarities, neighbor_indices):
-            # Uzmi odstupanje komšije za TU knjigu
             neighbor_diff = user_item_matrix[neighbor_index, book_idx]
             
             if neighbor_diff != 0:

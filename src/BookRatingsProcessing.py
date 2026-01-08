@@ -47,8 +47,8 @@ def filter_ratings(ratings):
 def ratings_normalization(ratings):
     user_means = ratings.groupby("User-ID")["Book-Rating"].mean()
     
-    ratings["User_mean"] = ratings["User-ID"].map(user_means)
+    ratings["User-Mean"] = ratings["User-ID"].map(user_means)
     
-    ratings["Book-Rating-Normalized"] = ratings["Book-Rating"] - ratings["User_mean"]
+    ratings["Book-Rating-Normalized"] = ratings["Book-Rating"] - ratings["User-Mean"]
     
     return ratings

@@ -1,7 +1,6 @@
 from src.MatrixCreator import create_item_user_matrix_sparse
 from sklearn.neighbors import NearestNeighbors 
 from collections import defaultdict
-from collections import defaultdict
 from sklearn.metrics import mean_squared_error
 import numpy as np
 
@@ -10,7 +9,6 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
     #item-user matrix
     item_user_matrix, book_index, user_index = create_item_user_matrix_sparse(ratings)
 
-    print(f"op",item_user_matrix)
     if user_id not in user_index:
         raise ValueError(f"User with ID {user_id} does not exists or does not have enough given ratings to recommend book for him.")
 
@@ -54,7 +52,7 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
 
     final_predictions = {}  
 
-    user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
+    user_mean = ratings[ratings["User-ID"] == user_id]["User-Mean"].iloc[0]
     for neighbor_index, scores in predicted_scores.items():
         numerator = scores[0]    
         denominator = scores[1]  
@@ -95,7 +93,7 @@ def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
     model_knn.fit(item_user_matrix)
     
     predicted_scores = {}
-    user_mean = ratings[ratings["User-ID"] == user_id]["User_mean"].iloc[0]
+    user_mean = ratings[ratings["User-ID"] == user_id]["User-Mean"].iloc[0]
 
     for rated_book in rated_books:
         numerator = 0.0
@@ -114,7 +112,6 @@ def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
                 continue
             
             neighbor_rating = item_user_matrix[neighbor_index, user_pos]
-
             
             if neighbor_rating != 0 and neighbor_index != rated_book:
                 numerator += neighbor_sim * neighbor_rating
@@ -122,7 +119,7 @@ def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
 
         if denominator > 0:
             pred = numerator / denominator + user_mean
-            # ograniči na skalu 1-10
+
             pred = max(1.0, min(10.0, pred))
             predicted_scores[book_index[rated_book]] = round(pred, 4)
             
