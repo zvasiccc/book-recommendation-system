@@ -1,7 +1,7 @@
 from src.LoadingData import load_data 
 from src.BookRatingsProcessing import preprocess_ratings, filter_ratings, ratings_normalization
 from src.UsersProcessing import preprocess_users
-from src.BooksRecommender import svd_recommended_books, evaluate_svd_rmse, uporedna_evaluacija
+from src.ModelBasedCF import svd_recommended_books, evaluate_svd_rmse, model_based_evaluation
 from src.UBCF import ubcf_recommended_books_knn,  ubcf_evaluation_rmse
 from src.IBCF import  ibcf_evaluation_rmse, ibcf_recommended_books_knn
 from src.BooksProcessing import preprocess_books

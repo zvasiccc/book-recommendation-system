@@ -4,28 +4,23 @@ from surprise.model_selection import train_test_split
 
 def svd_recommended_books(user_id, ratings, top_n=10):
 
-    # priprema podataka za Surprise
     reader = Reader(rating_scale=(ratings['Book-Rating'].min(), ratings['Book-Rating'].max()))
     data = Dataset.load_from_df(ratings[['User-ID', 'ISBN', 'Book-Rating']], reader)
 
-    trainset = data.build_full_trainset()  # koristi sve podatke za treniranje
+    trainset = data.build_full_trainset()  #using all data for training
+    #data initialization and model training
+    svd_model = SVD()
+    svd_model.fit(trainset)
 
-    # inicijalizacija i treniranje SVD modela
-    algo = SVD()
-    algo.fit(trainset)
-
-    # skupljanje svih ISBN-ova koje korisnik nije ocenio
     all_books = set(ratings['ISBN'].unique())
     user_rated_books = set(ratings[ratings['User-ID'] == user_id]['ISBN'])
     books_to_predict = all_books - user_rated_books
 
-    # predikcija ocena
     predictions = []
     for book in books_to_predict:
-        pred = algo.predict(user_id, book)
+        pred = svd_model.predict(user_id, book)
         predictions.append((book, pred.est))
 
-    # sortiranje i vraćanje top-N knjiga
     top_books = sorted(predictions, key=lambda x: x[1], reverse=True)[:top_n]
     return top_books
 
@@ -98,13 +93,12 @@ def evaluate_nmf_rmse(ratings, test_size=0.2):
     predictions = algo.test(testset)
     return accuracy.rmse(predictions)
 
-def uporedna_evaluacija(ratings):
-    rezultati = {}
+def model_based_evaluation(ratings):
+    results = {}
     
-    # Lista modela koje želimo da testiramo
-    modeli = {
+    models = {
         "SVD": SVD(),
-        # "SVD++": SVDpp(),
+        "SVD++": SVDpp(),
         "NMF": NMF()
     }
     
@@ -112,10 +106,10 @@ def uporedna_evaluacija(ratings):
     data = Dataset.load_from_df(ratings[['User-ID', 'ISBN', 'Book-Rating']], reader)
     trainset, testset = train_test_split(data, test_size=0.2)
     
-    for ime, algo in modeli.items():
-        print(f"Treniram model: {ime}...")
+    for name, algo in models.items():
+        print(f"Model: {name}:")
         algo.fit(trainset)
-        predikcije = algo.test(testset)
-        rezultati[ime] = accuracy.rmse(predikcije)
+        predictions = algo.test(testset)
+        results[name] = accuracy.rmse(predictions)
         
-    return rezultati
+    return results
