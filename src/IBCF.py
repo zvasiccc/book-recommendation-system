@@ -30,9 +30,7 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
     predicted_scores = defaultdict(lambda: [0.0, 0.0]) 
 
     for rated_book in rated_books:  
-        user_rating = item_user_matrix[rated_book, user_pos]
-        if user_rating == 0:
-            continue
+        rating_diff = item_user_matrix[rated_book, user_pos]
         distances, indices = model_knn.kneighbors(item_user_matrix[rated_book])
 
         similarities = 1 - distances.flatten()[1:]
@@ -46,22 +44,19 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
             if neighbor_sim <= 0:    
                 continue
 
-            predicted_scores[neighbor_index][0] += neighbor_sim * user_rating
+            predicted_scores[neighbor_index][0] += neighbor_sim * rating_diff
             predicted_scores[neighbor_index][1] += abs(neighbor_sim)
 
 
     final_predictions = {}  
 
     user_mean = ratings[ratings["User-ID"] == user_id]["User-Mean"].iloc[0]
-    for neighbor_index, scores in predicted_scores.items():
-        numerator = scores[0]    
-        denominator = scores[1]  
+    for neighbor_index, score_pair in predicted_scores.items():
 
-        #avoid dividing with zero
-        if denominator > 0:
-            predicted_rating = numerator / denominator + user_mean
-            final_score = max(1.0, min(10.0, predicted_rating))
-            final_predictions[book_index[neighbor_index]] = round(final_score, 4)
+        if score_pair[1] > 0:
+            book_isbn = book_index[neighbor_index]
+            predicted_rating = score_pair[0] / score_pair[1] + user_mean
+            final_predictions[book_isbn] = max(1.0, min(10.0, predicted_rating))
             
     return sorted(
         final_predictions.items(),
@@ -131,7 +126,7 @@ def ibcf_evaluation_rmse(user_id,ratings):
     true_ratings = ratings[ratings['User-ID'] == user_id].set_index('ISBN')['Book-Rating'].to_dict()
     
     print(f"predictions su",ibcf_predictions)
-    print(f"true tatings su",true_ratings)
+    print(f"true ratings su",true_ratings)
     
     common_books = set(ibcf_predictions.keys()).intersection(true_ratings.keys())
     if not common_books:
