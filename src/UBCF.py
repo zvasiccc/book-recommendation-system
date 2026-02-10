@@ -14,12 +14,7 @@ def ubcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
     #position in matrix of a user with user_id
     user_pos = np.where(user_indices == user_id)[0][0]
 
-    model_knn = NearestNeighbors(
-        metric="cosine",
-        algorithm="brute",
-        n_neighbors=k_neighbors + 1,
-        n_jobs=-1
-    )
+    model_knn = NearestNeighbors( metric="cosine", algorithm="brute",  n_neighbors=k_neighbors + 1, n_jobs=-1 )
     model_knn.fit(user_item_matrix)
 
     #distances and indexes of user's neighbors

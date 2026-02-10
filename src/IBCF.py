@@ -125,9 +125,6 @@ def ibcf_evaluation_rmse(user_id,ratings):
     ibcf_predictions = ibcf_predict_for_rmse(user_id, ratings)
     true_ratings = ratings[ratings['User-ID'] == user_id].set_index('ISBN')['Book-Rating'].to_dict()
     
-    print(f"predictions su",ibcf_predictions)
-    print(f"true ratings su",true_ratings)
-    
     common_books = set(ibcf_predictions.keys()).intersection(true_ratings.keys())
     if not common_books:
         return None 

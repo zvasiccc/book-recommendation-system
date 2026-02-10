@@ -1,15 +1,17 @@
+from src.BooksProcessing import normalize_isbn
 from src.GlobalVariables import USER_PERCENTILE, BOOK_PERCENTILE, MIN_RATING, MAX_RATING, USER_BASED_THRESHOLD_PERCENTILE,  MIN_NUBMER_OF_RATINGS, MIN_NUBMER_OF_BOOK_RATINGS
 
 def preprocess_ratings(ratings):
     ratings = ratings.dropna(subset=["User-ID", "ISBN"]) #User-ID and ISBN are mandatory
     ratings = ratings[ratings["User-ID"].apply(lambda x: str(x).isdigit())]
     ratings = ratings[ratings["ISBN"].apply(lambda x: isinstance(x, str))] 
+    ratings["ISBN"] = ratings["ISBN"].apply(normalize_isbn) 
 
     ratings = ratings.groupby(["User-ID", "ISBN"], as_index=False)["Book-Rating"].mean() #aggregating duplicated in a single row with average rating
 
     ratings = ratings[(ratings["Book-Rating"] >= MIN_RATING) & (ratings["Book-Rating"] <= MAX_RATING)]
     
-    user_ratings_number = ratings.groupby("User-ID").size() #Pandas series: key is User-ID, value is count of ratings for that user
+    user_ratings_number = ratings.groupby("User-ID").size() #pandas series: key is User-ID, value is count of ratings for that user
     book_ratings_number = ratings.groupby("ISBN").size()
 
     users_threshold = user_ratings_number.quantile(USER_PERCENTILE)

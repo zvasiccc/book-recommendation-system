@@ -62,7 +62,7 @@ def model_based_evaluation(ratings):
     
     models = {
         "SVD": SVD(),
-        "SVD++": SVDpp(),
+        #"SVD++": SVDpp(), #slow
         "NMF": NMF()
     }
     
@@ -71,7 +71,7 @@ def model_based_evaluation(ratings):
     trainset, testset = train_test_split(data, test_size=0.2)
     
     for name, algo in models.items():
-        print(f"Model: {name}:")
+        print(f"{name} ",end="")
         algo.fit(trainset)
         predictions = algo.test(testset)
         results[name] = accuracy.rmse(predictions)
