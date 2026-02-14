@@ -31,13 +31,15 @@ def ubcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
     #prediction:
     for neighbor_sim, neighbor_index in zip(similarities, neighbor_indices):
         neighbor_books = user_item_matrix[neighbor_index].indices
+        neighbor_user_id = user_indices[neighbor_index]
+        neighbor_user_weight = ratings.loc[ratings["User-ID"] == neighbor_user_id, "user_weight"].iloc[0]
 
         for book_idx in neighbor_books:
             if book_idx in rated_books:
                 continue
 
             rating_diff = user_item_matrix[neighbor_index, book_idx]
-            predicted_scores[book_idx][0] += neighbor_sim * rating_diff 
+            predicted_scores[book_idx][0] += neighbor_sim * rating_diff * neighbor_user_weight
             predicted_scores[book_idx][1] += abs(neighbor_sim)
 
     user_mean = ratings[ratings["User-ID"] == user_id]["User-Mean"].iloc[0]
@@ -87,9 +89,11 @@ def ubcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
 
         for neighbor_sim, neighbor_index in zip(similarities, neighbor_indices):
             neighbor_diff = user_item_matrix[neighbor_index, book_idx]
+            neighbor_user_id = user_indices[neighbor_index]
+            neighbor_user_weight = ratings.loc[ratings["User-ID"] == neighbor_user_id, "user_weight"].iloc[0]
             
             if neighbor_diff != 0:
-                numerator += neighbor_sim * neighbor_diff
+                numerator += neighbor_sim * neighbor_diff * neighbor_user_weight
                 denominator += abs(neighbor_sim)
         
         if denominator > 0:

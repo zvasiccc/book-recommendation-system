@@ -37,14 +37,17 @@ def ibcf_recommended_books_knn(user_id, ratings, top_n=10, k_neighbors=50):
         neighbor_indices = indices.flatten()[1:]
 
         for neighbor_sim, neighbor_index in zip(similarities, neighbor_indices):
-
+        
             if neighbor_index in rated_books:
                 continue
 
             if neighbor_sim <= 0:    
                 continue
 
-            predicted_scores[neighbor_index][0] += neighbor_sim * rating_diff
+            neighbor_isbn = book_index[neighbor_index]
+            neighbor_book_weight = ratings.loc[ratings["ISBN"] == neighbor_isbn,"book_weight"].iloc[0]
+            
+            predicted_scores[neighbor_index][0] += neighbor_sim * rating_diff * neighbor_book_weight
             predicted_scores[neighbor_index][1] += abs(neighbor_sim)
 
 
@@ -108,8 +111,11 @@ def ibcf_predict_for_rmse(user_id, ratings, k_neighbors=50):
             
             neighbor_rating = item_user_matrix[neighbor_index, user_pos]
             
+            neighbor_isbn = book_index[neighbor_index]
+            neighbor_book_weight = ratings.loc[ratings["ISBN"] == neighbor_isbn,"book_weight"].iloc[0]
+            
             if neighbor_rating != 0 and neighbor_index != rated_book:
-                numerator += neighbor_sim * neighbor_rating
+                numerator += neighbor_sim * neighbor_rating * neighbor_book_weight
                 denominator += abs(neighbor_sim)
 
         if denominator > 0:

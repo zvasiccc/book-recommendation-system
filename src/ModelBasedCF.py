@@ -7,7 +7,7 @@ def svd_recommended_books(user_id, ratings, top_n=10):
     reader = Reader(rating_scale=(ratings['Book-Rating'].min(), ratings['Book-Rating'].max()))
     data = Dataset.load_from_df(ratings[['User-ID', 'ISBN', 'Book-Rating']], reader)
 
-    trainset = data.build_full_trainset()  #using all data for training
+    trainset = data.build_full_trainset()  #using all data to train
     #data initialization and model training
     svd_model = SVD()
     svd_model.fit(trainset)

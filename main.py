@@ -1,7 +1,7 @@
 from src.LoadingData import load_data 
 from src.BookRatingsProcessing import preprocess_ratings, filter_ratings, ratings_normalization
 from src.UsersProcessing import preprocess_users
-from src.ModelBasedCF import svd_recommended_books,nmf_recommended_books, model_based_evaluation
+from src.ModelBasedCF import svd_recommended_books, svdpp_recommended_books, nmf_recommended_books, model_based_evaluation
 from src.UBCF import ubcf_recommended_books_knn,  ubcf_evaluation_rmse
 from src.IBCF import  ibcf_evaluation_rmse, ibcf_recommended_books_knn
 from src.BooksProcessing import preprocess_books
@@ -22,14 +22,23 @@ books = books[books["ISBN"].isin(ratings["ISBN"].unique())].reset_index(drop=Tru
 users = users[users["User-ID"].isin(ratings["User-ID"].unique())].reset_index(drop=True)
     
 # ratings_per_user = ratings.groupby('User-ID').size().sort_values(ascending=True)
-# print(ratings_per_user.head(6000))
+# print(ratings_per_user.head(3500))
 
+#user with high number of ratings
+#user_id=200245
 
-user_id=200245
+#user with middle  number of ratings
+#user_id=132909
+
+#user with low number of ratigs
+user_id=192176
+#user_id=192492
+#user_id=103467
 
 recommendations_ubcf = ubcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 recommendations_ibcf = ibcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 recommendations_svd =  svd_recommended_books(user_id, ratings,TOP_N_RECOMMENDATIONS)
+#recommendations_svdpp =  svdpp_recommended_books(user_id, ratings,TOP_N_RECOMMENDATIONS) #slow
 recommendations_nmf =  nmf_recommended_books(user_id, ratings,TOP_N_RECOMMENDATIONS)
 
 true_ratings = ratings[ratings['User-ID']==user_id].set_index('ISBN')['Book-Rating'].to_dict()
@@ -68,6 +77,12 @@ for isbn, score in recommendations_svd:
     book = books_lookup.loc[isbn]
     print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")
 print(f"-------------------------------------------------------------------------------")
+
+# print(f"SVD++:")   
+# for isbn, score in recommendations_svdpp:
+#     book = books_lookup.loc[isbn]
+#     print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")
+# print(f"-------------------------------------------------------------------------------")
 
 print(f"NMF:")   
 for isbn, score in recommendations_nmf:

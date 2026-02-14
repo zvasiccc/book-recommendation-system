@@ -1,5 +1,5 @@
 from src.BooksProcessing import normalize_isbn
-from src.GlobalVariables import USER_PERCENTILE, BOOK_PERCENTILE, MIN_RATING, MAX_RATING, USER_BASED_THRESHOLD_PERCENTILE,  MIN_NUBMER_OF_RATINGS, MIN_NUBMER_OF_BOOK_RATINGS
+from src.GlobalVariables import  MIN_RATING, MAX_RATING, USER_BASED_THRESHOLD_PERCENTILE,  MIN_NUBMER_OF_RATINGS, MIN_NUBMER_OF_BOOK_RATINGS
 
 def preprocess_ratings(ratings):
     ratings = ratings.dropna(subset=["User-ID", "ISBN"]) #User-ID and ISBN are mandatory
@@ -11,25 +11,6 @@ def preprocess_ratings(ratings):
 
     ratings = ratings[(ratings["Book-Rating"] >= MIN_RATING) & (ratings["Book-Rating"] <= MAX_RATING)]
     
-    user_ratings_number = ratings.groupby("User-ID").size() #pandas series: key is User-ID, value is count of ratings for that user
-    book_ratings_number = ratings.groupby("ISBN").size()
-
-    users_threshold = user_ratings_number.quantile(USER_PERCENTILE)
-    books_threshold = book_ratings_number.quantile(BOOK_PERCENTILE)
-
-    extreme_users = user_ratings_number[user_ratings_number > users_threshold].index #is Key in user_ratings_number Pandas Series bigger then threshold
-    extreme_books = book_ratings_number[book_ratings_number > books_threshold].index
-
-    #new columns with number of user ratings and book ratings
-    ratings["user_rating_count"] = ratings["User-ID"].map(user_ratings_number)
-    ratings["book_rating_count"] = ratings["ISBN"].map(book_ratings_number)
-
-    #users scalling
-    #ratings.loc[ratings["User-ID"].isin(extreme_users), "Book-Rating"] *= users_threshold / ratings.loc[ratings["User-ID"].isin(extreme_users), "user_rating_count"]
-
-    #books scalling
-    #ratings.loc[ratings["ISBN"].isin(extreme_books), "Book-Rating"] *= books_threshold / ratings.loc[ratings["ISBN"].isin(extreme_books), "book_rating_count"]
-
     return ratings
 
 

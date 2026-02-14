@@ -1,4 +1,6 @@
 from scipy.sparse import csr_matrix
+from src.GlobalVariables import USER_PERCENTILE, BOOK_PERCENTILE
+import numpy as np
 
 def prepare_data_for_matrix_sparse(ratings):
     
@@ -11,7 +13,21 @@ def prepare_data_for_matrix_sparse(ratings):
     
     mapped_users = ratings["User-ID"].map(user_map).to_numpy()
     mapped_books = ratings["ISBN"].map(book_map).to_numpy()
+    
+    user_ratings_number = ratings.groupby("User-ID")["Book-Rating-Normalized"].transform("count")
+    book_ratings_number = ratings.groupby("ISBN")["Book-Rating-Normalized"].transform("count")
+
+    ratings["user_rating_count"] = user_ratings_number
+    ratings["book_rating_count"] = book_ratings_number
+
+    users_threshold = np.quantile(user_ratings_number, USER_PERCENTILE)
+    books_threshold = np.quantile(book_ratings_number, BOOK_PERCENTILE)
+
+    ratings["user_weight"] = np.minimum(1, users_threshold / user_ratings_number)
+    ratings["book_weight"] = np.minimum(1, books_threshold / book_ratings_number)
+    
     data = ratings["Book-Rating-Normalized"].to_numpy()
+
     return  mapped_users, mapped_books, data, book_indices, user_indices
 
 def create_user_item_matrix_sparse(ratings):
