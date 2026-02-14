@@ -36,7 +36,7 @@ user_id=200245
 recommendations_ubcf = ubcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 recommendations_ibcf = ibcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
 recommendations_svd =  svd_recommended_books(user_id, ratings,TOP_N_RECOMMENDATIONS)
-#recommendations_svdpp =  svdpp_recommended_books(user_id, ratings,TOP_N_RECOMMENDATIONS) #slow
+recommendations_svdpp =  svdpp_recommended_books(user_id, ratings,TOP_N_RECOMMENDATIONS) #slow
 recommendations_nmf =  nmf_recommended_books(user_id, ratings,TOP_N_RECOMMENDATIONS)
 
 true_ratings = ratings[ratings['User-ID']==user_id].set_index('ISBN')['Book-Rating'].to_dict()
@@ -76,11 +76,11 @@ for isbn, score in recommendations_svd:
     print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")
 print(f"-------------------------------------------------------------------------------")
 
-# print(f"SVD++:")   
-# for isbn, score in recommendations_svdpp:
-#     book = books_lookup.loc[isbn]
-#     print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")
-# print(f"-------------------------------------------------------------------------------")
+print(f"SVD++:")   
+for isbn, score in recommendations_svdpp:
+    book = books_lookup.loc[isbn]
+    print(f"{book['Book-Title']} — {book['Book-Author']}  (score={score:.3f})")
+print(f"-------------------------------------------------------------------------------")
 
 print(f"NMF:")   
 for isbn, score in recommendations_nmf:

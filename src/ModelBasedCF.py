@@ -62,7 +62,7 @@ def model_based_evaluation(ratings):
     
     models = {
         "SVD": SVD(),
-        #"SVD++": SVDpp(), #slow
+        "SVD++": SVDpp(), #slow
         "NMF": NMF()
     }
     
