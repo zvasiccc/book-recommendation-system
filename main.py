@@ -25,14 +25,12 @@ users = users[users["User-ID"].isin(ratings["User-ID"].unique())].reset_index(dr
 # print(ratings_per_user.head(3500))
 
 #user with high number of ratings
-#user_id=200245
+user_id=200245
 
 #user with middle  number of ratings
 #user_id=132909
 
 #user with low number of ratigs
-user_id=192176
-#user_id=192492
 #user_id=103467
 
 recommendations_ubcf = ubcf_recommended_books_knn(user_id, ratings,TOP_N_RECOMMENDATIONS)
